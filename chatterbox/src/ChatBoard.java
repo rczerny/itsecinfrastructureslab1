@@ -1,13 +1,18 @@
 import java.awt.Point;
+import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
 
+import javax.security.cert.CertificateException;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JViewport;
 
+import net.jxse.configuration.JxseConfigurationTool;
+import net.jxse.configuration.JxsePeerConfiguration;
+import net.jxta.configuration.JxtaConfigurationException;
 import net.jxta.discovery.DiscoveryService;
 import net.jxta.document.AdvertisementFactory;
 import net.jxta.document.Element;
@@ -23,19 +28,22 @@ import net.jxta.id.IDFactory;
 import net.jxta.peergroup.NetPeerGroupFactory;
 import net.jxta.peergroup.PeerGroup;
 import net.jxta.peergroup.PeerGroupID;
+import net.jxta.peergroup.WorldPeerGroupFactory;
 import net.jxta.pipe.InputPipe;
 import net.jxta.pipe.OutputPipe;
 import net.jxta.pipe.PipeID;
 import net.jxta.pipe.PipeMsgEvent;
 import net.jxta.pipe.PipeMsgListener;
 import net.jxta.pipe.PipeService;
+import net.jxta.platform.NetworkConfigurator;
+import net.jxta.protocol.ConfigParams;
 import net.jxta.protocol.PipeAdvertisement;
 import net.jxta.rendezvous.RendezVousService;
 
 
 public class ChatBoard implements  PipeMsgListener
 {
-	
+
 	//JXTA
 	private PeerGroup group;
 	private PipeService pipes;
@@ -50,29 +58,68 @@ public class ChatBoard implements  PipeMsgListener
 	private JTextField input;
 	private JTextField nickname;
 
-	
-	public static void main(String[] args) {
+
+	public static void main(String[] args) throws JxtaConfigurationException, IOException{
 		try {
+
+			NetworkConfigurator config = new NetworkConfigurator();
+
+			if (!config.exists()) {
+				// Create a new configuration with a new name, principal, and pass
+				config.setName("New Name");
+				config.setPrincipal("username");
+				config.setPassword("password");
+				try {
+					//persist it
+					config.save();
+				} catch (IOException io) {
+					// deal with the io error
+				}
+			} else {
+				// Load the pre-existing configuration
+				File pc = new File(config.getHome(), "PlatformConfig");
+				try {
+					config.load(pc.toURI());
+					// make changes if so desired
+					// store the PlatformConfig under the default home
+					config.save();
+				} catch (CertificateException ce) {
+					// In case the root cert is invalid, this creates a new one
+					try {
+						//principal
+						config.setPrincipal("principal");
+						//password to encrypt private key with
+						config.setPassword("password");
+						config.save();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			WorldPeerGroupFactory wpgf = new WorldPeerGroupFactory(config.getPlatformConfig(), config.getStoreHome());
 			NetPeerGroupFactory npgf=new NetPeerGroupFactory();
 			PeerGroup netGroup=npgf.getNetPeerGroup();
-			
+
 			RendezVousService rdv=netGroup.getRendezVousService();
 			while(!rdv.getLocalRendezVousView().isEmpty())
 			{
-				try {Thread.sleep(1000);}
+				try {
+					Thread.sleep(1000);
+				}
 				catch(Exception ex) {}
 			}
 		} catch (PeerGroupException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
+
+
 
 	}
 	/**
-	* @see biz.junginger.jxta.Groups.Listener#groupJoined(PeerGroup)
-	*/
+	 * @see biz.junginger.jxta.Groups.Listener#groupJoined(PeerGroup)
+	 */
 	public void joinedGroup(PeerGroup group)
 	{
 		this.group = group;
@@ -96,8 +143,8 @@ public class ChatBoard implements  PipeMsgListener
 	}
 
 	/**
-	*  @see biz.junginger.jxta.Groups.Listener#createdGroup(net.jxta.peergroup.PeerGroup)
-	*/
+	 *  @see biz.junginger.jxta.Groups.Listener#createdGroup(net.jxta.peergroup.PeerGroup)
+	 */
 	public void createdGroup(PeerGroup group)
 	{}
 
@@ -106,10 +153,10 @@ public class ChatBoard implements  PipeMsgListener
 		byte[] seed = new byte[16];
 		for (int i = 0; i < seed.length; i++)
 			seed[i] = (byte) 0x61;
-		
+
 		return(PipeID)IDFactory.newPipeID(groupID,seed);
 	}
-			
+
 	public void connectPipe(PipeAdvertisement adv) throws java.io.IOException
 	{
 		if (inPipe != null)
@@ -139,18 +186,18 @@ public class ChatBoard implements  PipeMsgListener
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void sendMessage(String sender, String text) throws IOException
 	{
-	StructuredDocument doc=StructuredDocumentFactory.newStructuredDocument(mimeType, "JXTA-Tutorial:ChatMsg");
-	doc.appendChild(doc.createElement("Text", text));
-	doc.appendChild(doc.createElement("Sender", nickname.getText()));
+		StructuredDocument doc=StructuredDocumentFactory.newStructuredDocument(mimeType, "JXTA-Tutorial:ChatMsg");
+		doc.appendChild(doc.createElement("Text", text));
+		doc.appendChild(doc.createElement("Sender", nickname.getText()));
 
-	Message msg=new Message();
-	msg.addMessageElement(new TextDocumentMessageElement("ChatMsg", (TextDocument) doc,null));
-	outPipe.send(msg);
+		Message msg=new Message();
+		msg.addMessageElement(new TextDocumentMessageElement("ChatMsg", (TextDocument) doc,null));
+		outPipe.send(msg);
 	}
 
 	/**
-	* @see net.jxta.pipe.PipeMsgListener#pipeMsgEvent(PipeMsgEvent)
-	*/
+	 * @see net.jxta.pipe.PipeMsgListener#pipeMsgEvent(PipeMsgEvent)
+	 */
 	@SuppressWarnings("rawtypes")
 	public void pipeMsgEvent(PipeMsgEvent msg) {
 		MessageElement element = msg.getMessage().getMessageElement("ChatMsg");
