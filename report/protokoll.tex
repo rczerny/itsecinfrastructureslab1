@@ -73,24 +73,38 @@
 
 \section{Lab1a}
 
-\subsection{Hinweise}
-\emph{Hinweise:}
-\begin{itemize}
-    \item Verwenden Sie entweder diese deutsche Version oder die englische Version der Vorlage in \lstinline{protocol.tex}
-    \item Setzen Sie alle Variablen nach \emph{FOR STUDENTS} im .tex-File
-    \item Ersetzen Sie die Platzhalter für Ihren Namen und Ihre MatNr.
-    \item Löschen Sie diesen Abschnitt über Hinweise und die folgenden Beispiel-Kapitel
-    \item Achten Sie auf geforderte Formate und Anforderungen an die Dateinamen für Ihre lab-Abgabe.
-    \item Führen Sie \lstinline{pdflatex} mindestens 2 Mal aus, damit die Referenzen und Seitenzahlen richtig im PDF dargestellt werden
-    \item Sie können dazu auch das Makefile verwenden: \lstinline{make de}
-\end{itemize}
+\subsection{Report}
 
-\subsection{Sub-Ueberschrift 1}
-Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+\subsection{Example exploit}
+ChatterBox in der jetztigen Version ist anf"allig f"ur Session Hijacking. Da die gesamte Daten"ubertragung unverschl"usselt erfolgt kann ein Angreifer z.B. mittels Packet Sniffing Session-IDs stehlen oder auch sogar an Login-Daten gelangen.
+\newline
+\newline
+Beispiel:
+\newline
+Ein Benutzer loggt sich "uber ein unverschl"usseltes WLAN an einem ChatterBox-Server ein. Ein Angreifer k"onnte nun den Datenverkehr mithilfe eines Packet Sniffers (z.B. Wireshark) mitlesen und so die Session-ID, die bei jedem HTTP-Request/Response mitgeschickt wird, dieses Benutzers erhalten (\hyperref[fig:message]{siehe Abbildung~\ref*{fig:message} auf Seite~\pageref*{fig:message}}).
+\begin{figure}[h!]
+  \centering
+  \fbox{
+    \includegraphics[width=0.8\textwidth]{./imgs/send_message.png}
+  }
+  \caption{Benutzer schickt eine Message ab}
+  \label{fig:message}
+\end{figure}
+\newline
+\newline
+Mittels dieser Session-ID erh"alt der Angreifer nun Zugriff auf den Account des Benutzers indem er die gestohlene ID "uber die URL angibt (\lstinline{http://<Server-IP>:8000/cb/main.py?sid=<gestohlene SID des Benutzers>}).
 
-\subsection{Sub-Ueberschrift 2}
-Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
-
+\subsection{Executive summary}
+%\emph{Hinweise:}
+%\begin{itemize}
+%    \item Verwenden Sie entweder diese deutsche Version oder die englische Version der Vorlage in \lstinline{protocol.tex}
+%    \item Setzen Sie alle Variablen nach \emph{FOR STUDENTS} im .tex-File
+%    \item Ersetzen Sie die Platzhalter für Ihren Namen und Ihre MatNr.
+%    \item Löschen Sie diesen Abschnitt über Hinweise und die folgenden Beispiel-Kapitel
+%    \item Achten Sie auf geforderte Formate und Anforderungen an die Dateinamen für Ihre lab-Abgabe.
+%    \item Führen Sie \lstinline{pdflatex} mindestens 2 Mal aus, damit die Referenzen und Seitenzahlen richtig im PDF dargestellt werden
+%    \item Sie können dazu auch das Makefile verwenden: \lstinline{make de}
+%\end{itemize}
 \section{Lab1b}
 
 \subsection{Sub-Ueberschrift 1}
