@@ -107,7 +107,7 @@ public class GUI extends JFrame implements ActionListener{
 			
 			if(!aliasTextfield.getText().isEmpty()&&!msgTextfield.getText().isEmpty())
 			{
-				if(aliasTextfield.getText().matches("^\\w$")&&msgTextfield.getText().matches("^\\w$")&&aliasTextfield.getText().matches("^\\w$")&&msgTextfield.getText().matches("^\\w$"))
+				if(aliasTextfield.getText().matches("^\\w$")&&msgTextfield.getText().matches("^\\w$")&&aliasTextfield.getText().length()<=10&&msgTextfield.getText().length()<=40)
 				textArea.append(aliasTextfield.getText()+":  " + msgTextfield.getText() + "\n");
 				JViewport port = scrollPane.getViewport();
 				int y = textArea.getHeight() - textArea.getVisibleRect().height;
