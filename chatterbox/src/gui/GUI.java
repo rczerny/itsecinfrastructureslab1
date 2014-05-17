@@ -30,8 +30,7 @@ public class GUI extends JFrame implements ActionListener{
 		pane=(JPanel) this.getContentPane();
 		pane.setLayout(new MigLayout("fillx"));
 		
-		scrollPane=new JScrollPane();
-		scrollPane.setPreferredSize(new Dimension(350,300));
+		
 
 
 		this.initWindow();
@@ -48,8 +47,9 @@ public class GUI extends JFrame implements ActionListener{
         
         textArea=new JTextArea();
         textArea.setEditable(false);
-        textArea.setPreferredSize(new Dimension(350,300));
         textArea.setLineWrap(true);
+        scrollPane=new JScrollPane(textArea);
+		scrollPane.setPreferredSize(new Dimension(600,600));
         
         
         
@@ -82,16 +82,14 @@ public class GUI extends JFrame implements ActionListener{
 			if(true)
 			{
 				pane.removeAll();
-				JPanel chatpane=new JPanel();
-				chatpane.setLayout(new MigLayout("fillx"));
-				chatpane.add(textArea,"span 2,push,wrap");
-				scrollPane.add(textArea);
+				
 				pane.add(scrollPane,"span 2, push,wrap");
 				pane.add(aliasLabel,"h 30!");
 			    pane.add(aliasTextfield,"wrap");
 			    pane.add(msgLabel);
 			    pane.add(msgTextfield,"wrap");
 			    pane.add(sendButton,"h 30!,span 2 2, align c");
+			    this.setSize(600, 500);
 			    this.validate();
 				
 			}
