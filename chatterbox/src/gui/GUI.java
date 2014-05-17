@@ -26,13 +26,14 @@ public class GUI extends JFrame implements ActionListener{
 	private JButton loginButton,sendButton;
 	private JTextArea textArea;
 	private JScrollPane scrollPane;
+	private String nickname;
 	
 	public GUI()
 	{
 		pane=(JPanel) this.getContentPane();
 		pane.setLayout(new MigLayout("fillx"));
 		
-		
+		nickname="";
 
 
 		this.initWindow();
@@ -56,14 +57,16 @@ public class GUI extends JFrame implements ActionListener{
         
         
         aliasLabel=new JLabel("Nickname:");
-        aliasTextfield=new JTextField(40);
+        aliasTextfield=new JTextField(10);
         msgLabel=new JLabel("Message:");
         msgTextfield=new JTextField(40);
         sendButton=new JButton("Senden");
         sendButton.addActionListener(this);
         
-        pane.add(nameLabel,"h 30!, push, aligny b");
-        pane.add(nameTextfield,"aligny b,wrap");
+        pane.add(aliasLabel,"h 30!, push, aligny b");
+        pane.add(aliasTextfield,"aligny b,wrap");
+        pane.add(nameLabel);
+	    pane.add(nameTextfield,"wrap");
         pane.add(pwLabel,"push, aligny top");
         pane.add(pwTextfield,"aligny top,wrap");
         pane.add(loginButton,"h 30!,span 2 2, align c,push, aligny top");
@@ -80,41 +83,69 @@ public class GUI extends JFrame implements ActionListener{
 		 
 		if (e.getSource() == loginButton) {
 				
-			//Passwortüberprüfung
-			if(true)
-			{
-				pane.removeAll();
-				
-				pane.add(scrollPane,"span 2, push,wrap");
-				pane.add(aliasLabel,"h 30!");
-			    pane.add(aliasTextfield,"wrap");
-			    pane.add(msgLabel);
-			    pane.add(msgTextfield,"wrap");
-			    pane.add(sendButton,"h 30!,span 2 2, align c");
-			    this.setSize(600, 500);
-			    this.validate();
-				
+			
+			if (!aliasTextfield.getText().isEmpty()
+					&& !nameTextfield.getText().isEmpty()
+					&& !pwTextfield.getText().isEmpty()) {
+				if (aliasTextfield.getText().length() <= 10
+						&& aliasTextfield.getText().matches("^\\w*$")
+						&& nameTextfield.getText().length() <= 10
+						&& pwTextfield.getText().length() <= 15) {
+					
+					//Passwortüberprüfung
+					if (true) {
+						
+						nickname=aliasTextfield.getText();
+						pane.removeAll();
+
+						pane.add(scrollPane, "span 2, push,wrap");
+						pane.add(msgLabel);
+						pane.add(msgTextfield, "wrap");
+						pane.add(sendButton, "h 30!,span 2 2, align c");
+						this.setSize(600, 500);
+						this.validate();
+
+					} else {
+						JOptionPane.showMessageDialog(this,
+								"Benutzername/Passwort falsch!", "Error",
+								JOptionPane.ERROR_MESSAGE);
+						nameTextfield.setText("");
+						pwTextfield.setText("");
+						aliasTextfield.setText("");
+
+					}
+				} else {
+					JOptionPane
+							.showMessageDialog(
+									this,
+									"Verwendung von unerlaubten(Nickname)/zu vielen Zeichen!",
+									"Error", JOptionPane.ERROR_MESSAGE);
+					nameTextfield.setText("");
+					pwTextfield.setText("");
+					aliasTextfield.setText("");
+				}
 			}
-			else
-			{
-				JOptionPane.showMessageDialog(this,"Benutzername/Passwort falsch!","Error",JOptionPane.ERROR_MESSAGE);
-				nameTextfield.setText("");
-				pwTextfield.setText("");
-				
-			}	
 		}
 		if (e.getSource() == sendButton) {
 			
-			if(!aliasTextfield.getText().isEmpty()&&!msgTextfield.getText().isEmpty())
+			if(!msgTextfield.getText().isEmpty())
 			{
-				if(aliasTextfield.getText().matches("^\\w$")&&msgTextfield.getText().matches("^\\w$")&&aliasTextfield.getText().length()<=10&&msgTextfield.getText().length()<=40)
-				textArea.append(aliasTextfield.getText()+":  " + msgTextfield.getText() + "\n");
+				if(msgTextfield.getText().matches("^\\w*$")&&msgTextfield.getText().length()<=40)
+				{
+				textArea.append(nickname+":  " + msgTextfield.getText() + "\n");
 				JViewport port = scrollPane.getViewport();
 				int y = textArea.getHeight() - textArea.getVisibleRect().height;
 				port.setViewPosition(new Point(0, y));
 				
 				aliasTextfield.setText("");
 				msgTextfield.setText("");
+				}
+				else
+				{
+					JOptionPane.showMessageDialog(this,"Verwendung von unerlaubten/zu vielen Zeichen!","Error",JOptionPane.ERROR_MESSAGE);
+					msgTextfield.setText("");
+					
+				}
 			}
 			
 			
