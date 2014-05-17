@@ -96,4 +96,8 @@ public class EventDAO {
 		return getEventsBetween(0, time);
 	}
 	
+	public List<ChatMessage> getEventsAfter(long time){
+		return getEventsBetween(time, Long.MAX_VALUE);
+	}	
+	
 }

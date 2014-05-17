@@ -28,4 +28,8 @@ public class EventService {
 	public List<ChatMessage> getEventsBefore(long time){
 		return eventDao.getEventsBefore(time);
 	}
+	
+	public List<ChatMessage> getEventsAfter(long time){
+		return eventDao.getEventsAfter(time);
+	}
 }
