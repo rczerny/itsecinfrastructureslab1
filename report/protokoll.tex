@@ -74,6 +74,24 @@
 \section{Lab1a}
 
 \subsection{Report}
+Speicherung des Passworts mangelhaft (OWASP A7): 
+In der Anwendung wird ein SHA1-Hash für die Speicherung des Passworts in die Datenbank verwendet, wodurch zu allen gespeicherten Hashes mittels beispielsweise Rainbow-Tabellen in ausreichend lohnenswerter Zeit der passende Klartext gefunden werden kann. Weit aus sicherer wäre es, wenn ein stärkeres Hashverfahren z.B. SHA256 in Kombination eines Salts verwendet werden würde.
+\newline
+\newline
+Sicherheitsrelevante Fehlkonfiguration (OWASP A6):
+Directory Listing ist in der Anwendung nicht deaktiviert. Angreifer können einfach im Verzeichnis des Servers navigieren und so alle Pythonklassen und die Datenbank herunterladen und somit verschiedenste Schwachstellen durch Code- bzw. Datenbankanalyse herausfiltern. Im speziellen können alle unverschlüsselt gespeicherten Daten(Usernamen, Events,…) aus der Datenbank gelesen werden, da die SqlLite-Datenbank nicht mittels Passwort verschlüsselt werden kann. 
+\newline
+\newline
+Unzureichende Absicherung der Transportschicht (OWASP A9): 
+Die Authentifizierung erfolgt ohne TLS/SSL, wodurch die Anmeldeinformationen im Netzwerkverkehr für jeden im Klartext ersichtlich wären. Angreifer könnten diesen einfach sniffen und so Zugang zu dem Benutzerkonto erhalten. Auch für die Textkommunikation wäre die Verwendung von TLS/SSL sinnvoll bzw. erforderlich, da es sich um sensible Daten handelt.
+\newline
+\newline
+Fehler im Sessionmanagement (OWASP A3): 
+Im Zuge des Sessionmanagements wurden gleich einige Fehler gemacht. Erstens wurden die Session-IDs in der URL mitgeschickt und zweitens wurden diese auch ungeschützt (ohne TLS/SSL) übertragen, wodurch Angreifer einfach die Session des Benutzers übernehmen können(Session Hijacking), wenn Angreifer Zugriff auf den relevanten Netzverkehr haben und diesen ausliest. Durch die Speicherung der Session in der URL ist es schon gefährlich, wenn der Benutzer unvorsichtig diese als Link an Freunden schickt, welche dann (möglicherweise unbewusst) seine Session übernehmen. Verhindert werden kann das, indem die Session-ID erstens nicht in der URL übertragen wird, sondern nur über TLS/SSL gesicherte Transportwege bzw. über ein Cookie mit gesetztem Secure-Flag. 
+Des weiteren wurde die Zeit  für das Auslaufen der Session viel zu lang spezifiziert (6000s=1h 40min). Nachfolgende Benutzer des Browsers können bei unzureichendem Logout(einfaches Schließen des Browsers) einfach weiterhin die Session des zuvor angemeldeten Users verwenden. Zusätzlich besteht bei der ursprünglichen Chatterboxanwendung nicht einmal die Möglichkeit eine Abmeldung des Users durchzuführen.
+\newline
+\newline
+Verfügbarkeit: Neben den Sicherheitslücken wurde auch ein ausnutzbarer Programmierfehler für einen Denial of Service DOS-Attacke entdeckt. Wird nämlich kein Alias angeben stürzt der Server ab, wodurch für jegliche User dieser unerreichbar wird.
 
 \subsection{Example exploit}
 ChatterBox in der jetztigen Version ist anf"allig f"ur Session Hijacking. Da die gesamte Daten"ubertragung unverschl"usselt erfolgt kann ein Angreifer z.B. mittels Packet Sniffing Session-IDs stehlen oder auch sogar an Login-Daten gelangen.
@@ -95,16 +113,7 @@ Ein Benutzer loggt sich "uber ein unverschl"usseltes WLAN an einem ChatterBox-Se
 Mittels dieser Session-ID erh"alt der Angreifer nun Zugriff auf den Account des Benutzers indem er die gestohlene ID "uber die URL angibt (\lstinline{http://<Server-IP>:8000/cb/main.py?sid=<gestohlene SID des Benutzers>}).
 
 \subsection{Executive summary}
-%\emph{Hinweise:}
-%\begin{itemize}
-%    \item Verwenden Sie entweder diese deutsche Version oder die englische Version der Vorlage in \lstinline{protocol.tex}
-%    \item Setzen Sie alle Variablen nach \emph{FOR STUDENTS} im .tex-File
-%    \item Ersetzen Sie die Platzhalter für Ihren Namen und Ihre MatNr.
-%    \item Löschen Sie diesen Abschnitt über Hinweise und die folgenden Beispiel-Kapitel
-%    \item Achten Sie auf geforderte Formate und Anforderungen an die Dateinamen für Ihre lab-Abgabe.
-%    \item Führen Sie \lstinline{pdflatex} mindestens 2 Mal aus, damit die Referenzen und Seitenzahlen richtig im PDF dargestellt werden
-%    \item Sie können dazu auch das Makefile verwenden: \lstinline{make de}
-%\end{itemize}
+Zusammenfassend lässt sich feststellen, dass aufgrund teilweise schwerwiegender sicherheitsbedingter Mängel der Chatterbox Applikation und fehlender Beachtung im Bezug auf Vertraulichkeit, Integrität und Verfügbarkeit, eine grundlegende Neuprogrammierung von Vorteil wäre.
 \section{Lab1b}
 
 \subsection{Sub-Ueberschrift 1}
