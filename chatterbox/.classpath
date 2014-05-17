@@ -22,5 +22,6 @@
 	<classpathentry kind="lib" path="lib/org.mortbay.jetty.jar"/>
 	<classpathentry kind="lib" path="lib/httptunnel-0.92.jar"/>
 	<classpathentry kind="lib" path="lib/sqlite-jdbc4-3.8.2-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Klaus/git/itsecinfrastructureslab1/chatterbox/lib/miglayout-4.0-swing.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
