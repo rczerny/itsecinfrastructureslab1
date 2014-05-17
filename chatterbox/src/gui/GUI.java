@@ -2,6 +2,7 @@ package gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -13,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JViewport;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -99,10 +101,23 @@ public class GUI extends JFrame implements ActionListener{
 				nameTextfield.setText("");
 				pwTextfield.setText("");
 				
+			}	
+		}
+		if (e.getSource() == sendButton) {
+			
+			if(!aliasTextfield.getText().isEmpty()&&!msgTextfield.getText().isEmpty())
+			{
+				if(aliasTextfield.getText().matches("^\\w$")&&msgTextfield.getText().matches("^\\w$")&&aliasTextfield.getText().matches("^\\w$")&&msgTextfield.getText().matches("^\\w$"))
+				textArea.append(aliasTextfield.getText()+":  " + msgTextfield.getText() + "\n");
+				JViewport port = scrollPane.getViewport();
+				int y = textArea.getHeight() - textArea.getVisibleRect().height;
+				port.setViewPosition(new Point(0, y));
+				
+				aliasTextfield.setText("");
+				msgTextfield.setText("");
 			}
 			
-
-				
+			
 		}
 		
 	}
