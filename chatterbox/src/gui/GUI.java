@@ -75,9 +75,10 @@ public class GUI extends JFrame implements ActionListener{
         pane.add(aliasTextfield,"aligny b,wrap");
         pane.add(pwLabel,"push, aligny top");
         pane.add(pwTextfield,"aligny top,wrap");
-        pane.add(loginButton,"h 30!,span 2 2, align c,push, aligny top");
+        //pane.add(loginButton,"h 30!,span 2 2, align c,push, aligny top");
+        pane.add(loginButton,"growx, span 2 2");
         
-		 this.setSize(350, 330);
+		 this.setSize(300, 150);
          this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
          this.setVisible(true);
          this.setTitle("Chatterbox");
@@ -106,8 +107,19 @@ public class GUI extends JFrame implements ActionListener{
 						
 						pane.add(scrollPane, "span 2, push,wrap");
 						pane.add(msgLabel);
-						pane.add(msgTextfield, "wrap");
-						pane.add(sendButton, "h 30!,span 2 2, align c");
+						pane.add(msgTextfield, "wrap, growx");
+						//pane.add(sendButton, "h 30!,span 2 2, align c");
+						pane.add(sendButton, "pushx, growx, span 2 2");
+						
+						msgTextfield.addActionListener(new ActionListener() {
+							
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								sendMessage();
+								
+							}
+						});
+						
 						this.setSize(600, 500);
 						this.validate();
 
@@ -124,33 +136,33 @@ public class GUI extends JFrame implements ActionListener{
 			}
 		}
 		if (e.getSource() == sendButton) {
-			
-			if(!msgTextfield.getText().isEmpty())
-			{
-				if(msgTextfield.getText().matches("^[\\w\\s!.,?:-]*$")&&msgTextfield.getText().length()<=40)
-				{
-
-					try {
-						cb.sendMessage(nickname, msgTextfield.getText());
-					} catch (IOException e1) {
-						JOptionPane.showMessageDialog(this, e1.getMessage(),
-								"Error", JOptionPane.ERROR_MESSAGE);
-
-					}
-
-					msgTextfield.setText("");
-				}
-				else
-				{
-					JOptionPane.showMessageDialog(this,"Verwendung von unerlaubten/zu vielen Zeichen!","Error",JOptionPane.ERROR_MESSAGE);
-					msgTextfield.setText("");
-					
-				}
-			}
-			
-			
+			sendMessage();		
 		}
 		
+	}
+	
+	public void sendMessage(){
+		if(!msgTextfield.getText().isEmpty())
+		{
+			if(msgTextfield.getText().matches("^[\\w\\s!.,?:-]*$")&&msgTextfield.getText().length()<=40)
+			{
+
+				try {
+					cb.sendMessage(nickname, msgTextfield.getText());
+				} catch (IOException e1) {
+					JOptionPane.showMessageDialog(this, e1.getMessage(),
+							"Error", JOptionPane.ERROR_MESSAGE);
+
+				}
+
+				msgTextfield.setText("");
+			}
+			else
+			{
+				JOptionPane.showMessageDialog(this,"Verwendung von unerlaubten/zu vielen Zeichen!","Error",JOptionPane.ERROR_MESSAGE);
+				msgTextfield.setText("");				
+			}
+		}
 	}
 	
 	public void appendMessage(String nick, String text) {
