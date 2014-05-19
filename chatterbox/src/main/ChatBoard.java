@@ -1,25 +1,21 @@
 package main;
+
 import gui.GUI;
 
-import java.awt.Point;
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
+import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.Enumeration;
 
-import javax.security.cert.CertificateException;
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.JViewport;
 
-import org.mortbay.servlet.SendRedirect;
-
-
-
-import net.jxse.configuration.JxseConfigurationTool;
-import net.jxse.configuration.JxsePeerConfiguration;
 import net.jxta.configuration.JxtaConfigurationException;
 import net.jxta.discovery.DiscoveryService;
 import net.jxta.document.AdvertisementFactory;
@@ -33,10 +29,8 @@ import net.jxta.endpoint.MessageElement;
 import net.jxta.endpoint.TextDocumentMessageElement;
 import net.jxta.exception.PeerGroupException;
 import net.jxta.id.IDFactory;
-import net.jxta.peergroup.NetPeerGroupFactory;
 import net.jxta.peergroup.PeerGroup;
 import net.jxta.peergroup.PeerGroupID;
-import net.jxta.peergroup.WorldPeerGroupFactory;
 import net.jxta.pipe.InputPipe;
 import net.jxta.pipe.OutputPipe;
 import net.jxta.pipe.PipeID;
@@ -45,9 +39,10 @@ import net.jxta.pipe.PipeMsgListener;
 import net.jxta.pipe.PipeService;
 import net.jxta.platform.NetworkConfigurator;
 import net.jxta.platform.NetworkManager;
-import net.jxta.protocol.ConfigParams;
 import net.jxta.protocol.PipeAdvertisement;
 import net.jxta.rendezvous.RendezVousService;
+
+import org.bouncycastle.util.encoders.Base64;
 
 
 public class ChatBoard implements  PipeMsgListener
@@ -68,6 +63,8 @@ public class ChatBoard implements  PipeMsgListener
 	private JTextField nickname;
 	
 	private static GUI gui;
+	
+	private String secretKey;
 	
 	public static final String Name = "ChatBoard";
 	public static final File ConfigurationFile = new File("." + System.getProperty("file.separator") + Name);
@@ -161,14 +158,14 @@ public class ChatBoard implements  PipeMsgListener
 	/**
 	 * @see biz.junginger.jxta.Groups.Listener#groupJoined(PeerGroup)
 	 */
-	public void joinedGroup(PeerGroup group,String seed)
+	public void joinedGroup(PeerGroup group)
 	{
 		this.group = group;
 		pipes = group.getPipeService();
 		PipeAdvertisement adv = (PipeAdvertisement) AdvertisementFactory
 				.newAdvertisement(PipeAdvertisement.getAdvertisementType());
 		//PipeID pid = getChatPipeID(group.getPeerGroupID());
-		PipeID pid=(PipeID)IDFactory.newPipeID(group.getPeerGroupID(),seed.getBytes());
+		PipeID pid=(PipeID)IDFactory.newPipeID(group.getPeerGroupID(),secretKey.getBytes());
 		adv.setPipeID(pid);
 		adv.setType(PipeService.PropagateType);
 		adv.setName("ChatPipe");
@@ -213,7 +210,7 @@ public class ChatBoard implements  PipeMsgListener
 		outPipe = pipes.createOutputPipe(adv, -1);
 	}
 
-	private void sendMessage() throws IOException
+	private void sendMessage() throws Exception
 	{
 		
 		String text = input.getText();
@@ -224,14 +221,15 @@ public class ChatBoard implements  PipeMsgListener
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void sendMessage(String sender, String text) throws IOException
+	public void sendMessage(String sender, String text) throws Exception
 	{
 		if (outPipe == null) {
 			throw new IOException("Not connected yet.\n");
 		}
 		StructuredDocument doc=StructuredDocumentFactory.newStructuredDocument(mimeType, "JXTA-Tutorial:ChatMsg");
-		doc.appendChild(doc.createElement("Text", text));
-		doc.appendChild(doc.createElement("Sender", sender));
+		doc.appendChild(doc.createElement("Text", encrypt(text)));
+		doc.appendChild(doc.createElement("Sender", encrypt(sender)));
+		doc.appendChild(doc.createElement("Hash", encrypt(computeHash(sender+text))));
 
 		Message msg=new Message();
 		msg.addMessageElement(new TextDocumentMessageElement("ChatMsg", (TextDocument) doc,null));
@@ -255,17 +253,91 @@ public class ChatBoard implements  PipeMsgListener
 
 		String nick = null;
 		String text = null;
+		String hash=null;
 		Enumeration enums = doc.getChildren();
 		while (enums.hasMoreElements()) {
 			Element el = (Element) enums.nextElement();
 			if (el.getKey().equals("Sender"))
-				nick = (String) el.getValue();
+			{
+				try {
+					nick = decrypt((String) el.getValue());
+				} catch (Exception e) {
+					System.out.println("Fehler beim Entschlüsseln!");
+				}
+			}
 			if (el.getKey().equals("Text"))
-				text = (String) el.getValue();
+			{
+				try {
+					text = decrypt((String) el.getValue());
+				} catch (Exception e) {
+					System.out.println("Fehler beim Entschlüsseln!");
+				}
+			}
+			if (el.getKey().equals("Hash"))
+			{
+				try {
+					hash = decrypt((String) el.getValue());
+				} catch (Exception e) {
+					System.out.println("Fehler beim Entschlüsseln!");
+				}
+			}
 		}
-		gui.appendMessage(nick, text);
+		try {
+			if(checkHash(hash, computeHash(nick+text)))
+			{
+				gui.appendMessage(nick, text);
+			}
+			else
+			{
+				gui.appendMessage(nick, text+" Achtung! Nachricht wurde möglicherweise geändert!");
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		System.out.println(nick + ": " + text);
 	}
 
+	public void setSecretKey(String secretKey){
+		this.secretKey = secretKey;
+	}
+
+	private String encrypt(String message) throws Exception {
+		MessageDigest md = MessageDigest.getInstance("SHA-1");
+		byte[] digestOfPassword = md.digest(secretKey.getBytes("utf-8"));
+		byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
+		SecretKey key = new SecretKeySpec(keyBytes, "DESede");
+		Cipher cipher = Cipher.getInstance("DESede");
+		cipher.init(Cipher.ENCRYPT_MODE, key);
+		byte[] plainTextBytes = message.getBytes("utf-8");
+		byte[] buf = cipher.doFinal(plainTextBytes);
+		byte [] base64Bytes = Base64.encode(buf);
+		String base64EncryptedString = new String(base64Bytes);
+		return base64EncryptedString;
+	}
+
+	private String decrypt(String encryptedText) throws Exception {
+		byte[] message = Base64.decode(encryptedText.getBytes("utf-8"));
+		MessageDigest md = MessageDigest.getInstance("SHA-1");
+		byte[] digestOfPassword = md.digest(secretKey.getBytes("utf-8"));
+		byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
+		SecretKey key = new SecretKeySpec(keyBytes, "DESede");
+		Cipher decipher = Cipher.getInstance("DESede");
+		decipher.init(Cipher.DECRYPT_MODE, key);
+		byte[] plainText = decipher.doFinal(message);
+		return new String(plainText, "UTF-8");
+	}
+	public static String computeHash(String text) throws Exception{
+		MessageDigest md = MessageDigest.getInstance("SHA-256");
+		byte[] digestOfText = md.digest(text.getBytes("utf-8"));
+		byte [] base64Bytes = Base64.encode(digestOfText);
+		String base64HashText = new String(base64Bytes);
+		return base64HashText;
+	}
+	
+	public static boolean checkHash(String str1, String str2) throws Exception{
+		return ChatBoard.computeHash(str1).equals(ChatBoard.computeHash(str2));
+	}
 	
 }

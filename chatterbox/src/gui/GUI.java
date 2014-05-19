@@ -6,6 +6,9 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -109,7 +112,10 @@ public class GUI extends JFrame implements ActionListener{
 					//if (true) {
 						
 						nickname=aliasTextfield.getText();
-						cb.joinedGroup(peergroup, new String(pwTextfield.getPassword()));
+					
+						
+						cb.setSecretKey(new String(pwTextfield.getPassword()));
+						cb.joinedGroup(peergroup);
 						pane.removeAll();
 						
 						pane.add(scrollPane, "span 2, push,wrap");
@@ -150,7 +156,7 @@ public class GUI extends JFrame implements ActionListener{
 				
 				try {
 					cb.sendMessage(nickname, msgTextfield.getText());
-				} catch (IOException e1) {
+				} catch (Exception e1) {
 					JOptionPane.showMessageDialog(this,e1.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
 
 				}
