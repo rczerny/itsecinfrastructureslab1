@@ -116,24 +116,12 @@ public class ChatBoard implements  PipeMsgListener
 		pipes = group.getPipeService();
 		PipeAdvertisement adv = (PipeAdvertisement) AdvertisementFactory
 				.newAdvertisement(PipeAdvertisement.getAdvertisementType());
-		PipeID pid=(PipeID)IDFactory.newPipeID(group.getPeerGroupID(),secretKey.getBytes());
+		//PipeID pid=(PipeID)IDFactory.newPipeID(group.getPeerGroupID(),secretKey.getBytes());
+		PipeID pid=(PipeID)IDFactory.newPipeID(group.getPeerGroupID(),computeHash(secretKey).getBytes());
 		adv.setPipeID(pid);
 		adv.setType(PipeService.PropagateType);
 		adv.setName("ChatPipe");
 		DiscoveryService discovery = group.getDiscoveryService();
-		
-		discovery.addDiscoveryListener(new DiscoveryListener() {
-			
-			@Override
-			public void discoveryEvent(DiscoveryEvent e) {
-				System.out.println("Discovery Event");
-				System.out.println("ID: " + e.getQueryID());
-				System.out.println("Source: " + e.getSource());
-				System.out.println("Response: " + e.getResponse().toString());
-				System.out.println("Results: " + e.getSearchResults());
-				
-			}
-		});
 		
 		try {
 			discovery.publish(adv);
