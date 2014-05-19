@@ -2,15 +2,26 @@ import java.awt.Point;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 import java.util.Enumeration;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.DESedeKeySpec;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import javax.security.cert.CertificateException;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -18,10 +29,9 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JViewport;
 
+import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Hex;
 import org.mortbay.servlet.SendRedirect;
-
-import test.RendezVous_Chandra_Receiving_Messages;
-import test.Tools;
 
 import net.jxse.configuration.JxseConfigurationTool;
 import net.jxse.configuration.JxsePeerConfiguration;
@@ -44,6 +54,7 @@ import net.jxta.exception.ProtocolNotSupportedException;
 import net.jxta.id.IDFactory;
 import net.jxta.impl.access.pse.PSEAccessService;
 import net.jxta.impl.content.ContentServiceImpl;
+import net.jxta.impl.membership.pse.DialogAuthenticator;
 import net.jxta.impl.membership.pse.FileKeyStoreManager;
 import net.jxta.impl.membership.pse.PSEMembershipService;
 import net.jxta.impl.membership.pse.PSEUtils;
@@ -88,6 +99,8 @@ public class ChatBoard implements PipeMsgListener
 	private JTextArea board;
 	private JTextField input;
 	private JTextField nickname;
+	
+	private String secretKey;
 
 	public static final String name = "ChatBoard";
 	public static final File configurationFile = new File("." + System.getProperty("file.separator") + name);
@@ -118,11 +131,11 @@ public class ChatBoard implements PipeMsgListener
 
 		try {
 			if(!new File(configurationFile.getCanonicalPath()).exists()){
-			// Static initialization of certificates
-			PSEUtils.IssuerInfo ForPSE = PSEUtils.genCert(name, null);
+				// Static initialization of certificates
+				PSEUtils.IssuerInfo ForPSE = PSEUtils.genCert(name, null);
 
-			theX509Certificate = ForPSE.cert;
-			thePrivateKey = ForPSE.issuerPkey;
+				theX509Certificate = ForPSE.cert;
+				thePrivateKey = ForPSE.issuerPkey;
 			}
 		} catch (SecurityException e) {
 			// TODO Auto-generated catch block
@@ -134,12 +147,12 @@ public class ChatBoard implements PipeMsgListener
 
 	}
 
-	public static void main(String[] args) throws JxtaConfigurationException, IOException, NoSuchProviderException, KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, ProtocolNotSupportedException{
+	public static void main(String[] args) throws Exception{
 		try {
 
 			KeyStore myKeyStore;
 			FileKeyStoreManager myFileKeyStoreManager = null;
-			
+
 			if(!new File(configurationFile.getCanonicalPath()).exists()){
 
 				// Preparing data
@@ -167,9 +180,9 @@ public class ChatBoard implements PipeMsgListener
 				myFileKeyStoreManager.saveKeyStore(myKeyStore, myKeyStorePassword.toCharArray());
 
 			}
-			
+
 			myFileKeyStoreManager = new FileKeyStoreManager((String)null, myKeyStoreProvider, myKeyStoreFile);
-			
+
 			// Reloading the KeyStore
 			myKeyStore = myFileKeyStoreManager.loadKeyStore(myKeyStorePassword.toCharArray());
 
@@ -209,7 +222,6 @@ public class ChatBoard implements PipeMsgListener
 			myNetworkConfigurator.setTcpInterfaceAddress("10.0.0.13");
 
 
-
 			// Setting the keystore
 			myNetworkConfigurator.setKeyStoreLocation(myKeyStoreFile.toURI());
 			myNetworkConfigurator.setPassword(myKeyStorePassword);
@@ -233,7 +245,11 @@ public class ChatBoard implements PipeMsgListener
 			MembershipService childGroupMembership = childPeerGroup.getMembershipService();
 
 			// Joining the peer group
-			AuthenticationCredential myAuthenticationCredit = new AuthenticationCredential(netPeerGroup, "StringAuthentication", null);
+			AuthenticationCredential myAuthenticationCredit = new AuthenticationCredential(netPeerGroup, "DialogAuthentication", null);
+
+			//DialogAuthenticator dialogAuthenticator = (DialogAuthenticator) childGroupMembership.apply(myAuthenticationCredit);
+
+			//dialogAuthenticator.interact();
 
 			StringAuthenticator myStringAuthenticator = (StringAuthenticator) childGroupMembership.apply(myAuthenticationCredit);
 
@@ -270,9 +286,18 @@ public class ChatBoard implements PipeMsgListener
 
 			System.out.println("Peer Group ID: " + childPeerGroup.getPeerGroupID());
 
-
+			cb.setSecretKey("gdfg435dsdgfgdfg3");
+			
 			while(true){
-				cb.sendMessage(InetAddress.getLocalHost().getHostAddress(), "Hallo");
+				String text = "Hallo Text!";
+				cb.sendMessage(InetAddress.getLocalHost().getHostAddress(), text);
+				
+				String encrypted = cb.encrypt(text);
+				cb.sendMessage(InetAddress.getLocalHost().getHostAddress(), "Encrypted: " + encrypted);
+				
+				String decrypted = cb.decrypt(encrypted);
+				cb.sendMessage(InetAddress.getLocalHost().getHostAddress(), "Decrypted: " + decrypted);
+				
 				try {
 					Thread.sleep(1000);
 				}
@@ -285,22 +310,34 @@ public class ChatBoard implements PipeMsgListener
 		}
 	}
 
+	public void setSecretKey(String secretKey) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException{
+		this.secretKey = secretKey;
+	}
 
-	public static PipeAdvertisement getPipeAdvertisement() {
+	private String encrypt(String message) throws Exception {
+		MessageDigest md = MessageDigest.getInstance("SHA-1");
+		byte[] digestOfPassword = md.digest(secretKey.getBytes("utf-8"));
+		byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
+		SecretKey key = new SecretKeySpec(keyBytes, "DESede");
+		Cipher cipher = Cipher.getInstance("DESede");
+		cipher.init(Cipher.ENCRYPT_MODE, key);
+		byte[] plainTextBytes = message.getBytes("utf-8");
+		byte[] buf = cipher.doFinal(plainTextBytes);
+		byte [] base64Bytes = Base64.encode(buf);
+		String base64EncryptedString = new String(base64Bytes);
+		return base64EncryptedString;
+	}
 
-		// Creating a Pipe Advertisement
-		PipeAdvertisement MyPipeAdvertisement = (PipeAdvertisement) AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
-		PipeID MyPipeID = IDFactory.newPipeID(PeerGroupID.defaultNetPeerGroupID, name.getBytes());
-
-		MyPipeAdvertisement.setPipeID(MyPipeID);
-		MyPipeAdvertisement.setType(pipeType);
-		MyPipeAdvertisement.setName("Test Pipe");
-		MyPipeAdvertisement.setDescription("Created by " + name);
-
-		System.out.println("getPipeAdvertisement");
-
-		return MyPipeAdvertisement;
-
+	private String decrypt(String encryptedText) throws Exception {
+		byte[] message = Base64.decode(encryptedText.getBytes("utf-8"));
+		MessageDigest md = MessageDigest.getInstance("SHA-1");
+		byte[] digestOfPassword = md.digest(secretKey.getBytes("utf-8"));
+		byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
+		SecretKey key = new SecretKeySpec(keyBytes, "DESede");
+		Cipher decipher = Cipher.getInstance("DESede");
+		decipher.init(Cipher.DECRYPT_MODE, key);
+		byte[] plainText = decipher.doFinal(message);
+		return new String(plainText, "UTF-8");
 	}
 
 	/**
