@@ -28,8 +28,8 @@ import net.miginfocom.swing.MigLayout;
 public class GUI extends JFrame implements ActionListener{
 
 	private JPanel pane;
-	private JTextField nameTextfield,aliasTextfield,msgTextfield,pwkeyStoreTextfield,pwprivteKeyTextfield;
-	private JLabel nameLabel, pwLabel,aliasLabel,msgLabel,pwkeyStoreLabel,pwprivteKeyLabel;
+	private JTextField nameTextfield,aliasTextfield,msgTextfield;
+	private JLabel  pwLabel,aliasLabel,msgLabel;
 	private JPasswordField pwTextfield;
 	private JButton loginButton,sendButton;
 	private JTextArea textArea;
@@ -53,14 +53,8 @@ public class GUI extends JFrame implements ActionListener{
 	
 	private void initWindow() {
 			
-		nameLabel=new JLabel("Benutzername:");
-        nameTextfield=new JTextField(10);
         pwLabel=new JLabel("Gruppenkennung:");
         pwTextfield=new JPasswordField(10);
-        //pwkeyStoreLabel=new JLabel("Passwort:");
-        //pwkeyStoreTextfield=new JTextField(10);
-        //pwprivteKeyLabel=new JLabel("Passwort:");
-        //pwprivteKeyTextfield=new JTextField(10);
         loginButton=new JButton("Anmelden");
         loginButton.addActionListener(this);
         
@@ -68,9 +62,7 @@ public class GUI extends JFrame implements ActionListener{
         textArea.setEditable(false);
         textArea.setLineWrap(true);
         scrollPane=new JScrollPane(textArea);
-		scrollPane.setPreferredSize(new Dimension(600,600));
-        
-        
+		scrollPane.setPreferredSize(new Dimension(600,600));      
         
         aliasLabel=new JLabel("Nickname:");
         aliasTextfield=new JTextField(10);
@@ -81,8 +73,6 @@ public class GUI extends JFrame implements ActionListener{
         
         pane.add(aliasLabel,"h 30!, push, aligny b");
         pane.add(aliasTextfield,"aligny b,wrap");
-        //pane.add(nameLabel);
-	    //pane.add(nameTextfield,"wrap");
         pane.add(pwLabel,"push, aligny top");
         pane.add(pwTextfield,"aligny top,wrap");
         pane.add(loginButton,"h 30!,span 2 2, align c,push, aligny top");
@@ -101,15 +91,11 @@ public class GUI extends JFrame implements ActionListener{
 				
 			
 			if (!aliasTextfield.getText().isEmpty()
-			//		&& !nameTextfield.getText().isEmpty()
 					&& pwTextfield.getPassword().length >0) {
 				if (aliasTextfield.getText().length() <= 10
 						&& aliasTextfield.getText().matches("^\\w*$")
-			//			&& nameTextfield.getText().length() <= 10
 						&& pwTextfield.getPassword().length <= 15) {
-					
-					//Passwortüberprüfung
-					//if (true) {
+
 						
 						nickname=aliasTextfield.getText();
 					
@@ -124,17 +110,7 @@ public class GUI extends JFrame implements ActionListener{
 						pane.add(sendButton, "h 30!,span 2 2, align c");
 						this.setSize(600, 500);
 						this.validate();
-/**
-					} else {
-						JOptionPane.showMessageDialog(this,
-								"Passwort falsch!", "Error",
-								JOptionPane.ERROR_MESSAGE);
-						nameTextfield.setText("");
-						pwTextfield.setText("");
-						aliasTextfield.setText("");
 
-					}
-					**/
 				} else {
 					JOptionPane
 							.showMessageDialog(
@@ -153,15 +129,16 @@ public class GUI extends JFrame implements ActionListener{
 			{
 				if(msgTextfield.getText().matches("^[\\w\\s!.,?:-]*$")&&msgTextfield.getText().length()<=40)
 				{
-				
-				try {
-					cb.sendMessage(nickname, msgTextfield.getText());
-				} catch (Exception e1) {
-					JOptionPane.showMessageDialog(this,e1.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
 
-				}
-				
-				msgTextfield.setText("");
+					try {
+						cb.sendMessage(nickname, msgTextfield.getText());
+					} catch (IOException e1) {
+						JOptionPane.showMessageDialog(this, e1.getMessage(),
+								"Error", JOptionPane.ERROR_MESSAGE);
+
+					}
+
+					msgTextfield.setText("");
 				}
 				else
 				{
@@ -182,14 +159,4 @@ public class GUI extends JFrame implements ActionListener{
 		int y = textArea.getHeight() - textArea.getVisibleRect().height;
 		port.setViewPosition(new Point(0, y));
 	}
-	
-	/**
-	 * @param args
-	 *
-	public static void main(String[] args) {
-		new GUI();
-
-	}
-	
-**/
 }

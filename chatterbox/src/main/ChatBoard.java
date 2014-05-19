@@ -4,6 +4,7 @@ import gui.GUI;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -55,12 +56,7 @@ public class ChatBoard implements  PipeMsgListener
 	private OutputPipe outPipe;
 	private MimeMediaType mimeType=new MimeMediaType("text", "xml");
 
-	//Swing
-	private JPanel panel;
-	private JScrollPane scrollPane;
-	private JTextArea board;
-	private JTextField input;
-	private JTextField nickname;
+
 	
 	private static GUI gui;
 	
@@ -73,40 +69,6 @@ public class ChatBoard implements  PipeMsgListener
 	public static void main(String[] args) throws JxtaConfigurationException, IOException{
 		try {
 
-//			NetworkConfigurator config = new NetworkConfigurator();
-//
-//			if (!config.exists()) {
-//				// Create a new configuration with a new name, principal, and pass
-//				config.setName("New Name");
-//				config.setPrincipal("username");
-//				config.setPassword("password");
-//				try {
-//					//persist it
-//					config.save();
-//				} catch (IOException io) {
-//					// deal with the io error
-//				}
-//			} else {
-//				// Load the pre-existing configuration
-//				File pc = new File(config.getHome(), "PlatformConfig");
-//				try {
-//					config.load(pc.toURI());
-//					// make changes if so desired
-//					// store the PlatformConfig under the default home
-//					config.save();
-//				} catch (CertificateException ce) {
-//					// In case the root cert is invalid, this creates a new one
-//					try {
-//						//principal
-//						config.setPrincipal("principal");
-//						//password to encrypt private key with
-//						config.setPassword("password");
-//						config.save();
-//					} catch (Exception e) {
-//						e.printStackTrace();
-//					}
-//				}
-//			}
 
             // Creation of network manager
             NetworkManager MyNetworkManager = new NetworkManager(NetworkManager.ConfigMode.EDGE,
@@ -136,16 +98,6 @@ public class ChatBoard implements  PipeMsgListener
 				catch(Exception ex) {}
 			}
 			gui=new GUI(cb,NetPeerGroup);
-			//cb.joinedGroup(NetPeerGroup);
-			/*
-			while(true){
-				cb.sendMessage(InetAddress.getLocalHost().getHostAddress(), "Hallo");
-				try {
-					Thread.sleep(1000);
-				}
-				catch(Exception ex) {}
-			}
-			**/
 			
 		} catch (PeerGroupException e) {
 			// TODO Auto-generated catch block
@@ -155,16 +107,13 @@ public class ChatBoard implements  PipeMsgListener
 
 
 	}
-	/**
-	 * @see biz.junginger.jxta.Groups.Listener#groupJoined(PeerGroup)
-	 */
+	
 	public void joinedGroup(PeerGroup group)
 	{
 		this.group = group;
 		pipes = group.getPipeService();
 		PipeAdvertisement adv = (PipeAdvertisement) AdvertisementFactory
 				.newAdvertisement(PipeAdvertisement.getAdvertisementType());
-		//PipeID pid = getChatPipeID(group.getPeerGroupID());
 		PipeID pid=(PipeID)IDFactory.newPipeID(group.getPeerGroupID(),secretKey.getBytes());
 		adv.setPipeID(pid);
 		adv.setType(PipeService.PropagateType);
@@ -174,27 +123,10 @@ public class ChatBoard implements  PipeMsgListener
 			discovery.publish(adv);
 			discovery.remotePublish(adv);
 			connectPipe(adv);
-//			board.append("\nWelcome to group '" + group.getPeerGroupName()
-//					+ "'\n");
 			System.out.println("joined group");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-	}
-
-	/**
-	 *  @see biz.junginger.jxta.Groups.Listener#createdGroup(net.jxta.peergroup.PeerGroup)
-	 */
-	public void createdGroup(PeerGroup group)
-	{}
-
-	private PipeID getChatPipeID(PeerGroupID groupID)
-	{
-		byte[] seed = new byte[16];
-		for (int i = 0; i < seed.length; i++)
-			seed[i] = (byte) 0x61;
-
-		return(PipeID)IDFactory.newPipeID(groupID,seed);
 	}
 
 	public void connectPipe(PipeAdvertisement adv) throws java.io.IOException
@@ -210,18 +142,9 @@ public class ChatBoard implements  PipeMsgListener
 		outPipe = pipes.createOutputPipe(adv, -1);
 	}
 
-	private void sendMessage() throws Exception
-	{
-		
-		String text = input.getText();
-		if (text == null || text.trim().length() == 0)
-			return;
-		input.setText("");
-		sendMessage(nickname.getText(), text);
-	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void sendMessage(String sender, String text) throws Exception
+	public void sendMessage(String sender, String text) throws IOException 
 	{
 		if (outPipe == null) {
 			throw new IOException("Not connected yet.\n");
@@ -236,9 +159,7 @@ public class ChatBoard implements  PipeMsgListener
 		outPipe.send(msg);
 	}
 
-	/**
-	 * @see net.jxta.pipe.PipeMsgListener#pipeMsgEvent(PipeMsgEvent)
-	 */
+	
 	@SuppressWarnings("rawtypes")
 	public void pipeMsgEvent(PipeMsgEvent msg) {
 		MessageElement element = msg.getMessage().getMessageElement("ChatMsg");
@@ -247,7 +168,7 @@ public class ChatBoard implements  PipeMsgListener
 			doc = StructuredDocumentFactory.newStructuredDocument(mimeType,
 					element.getStream());
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 			return;
 		}
 
@@ -255,47 +176,25 @@ public class ChatBoard implements  PipeMsgListener
 		String text = null;
 		String hash=null;
 		Enumeration enums = doc.getChildren();
+		
 		while (enums.hasMoreElements()) {
 			Element el = (Element) enums.nextElement();
 			if (el.getKey().equals("Sender"))
-			{
-				try {
 					nick = decrypt((String) el.getValue());
-				} catch (Exception e) {
-					System.out.println("Fehler beim Entschlüsseln!");
-				}
-			}
 			if (el.getKey().equals("Text"))
-			{
-				try {
 					text = decrypt((String) el.getValue());
-				} catch (Exception e) {
-					System.out.println("Fehler beim Entschlüsseln!");
-				}
-			}
 			if (el.getKey().equals("Hash"))
-			{
-				try {
-					hash = decrypt((String) el.getValue());
-				} catch (Exception e) {
-					System.out.println("Fehler beim Entschlüsseln!");
-				}
-			}
+				hash = decrypt((String) el.getValue());
+	
 		}
-		try {
-			if(checkHash(hash, computeHash(nick+text)))
-			{
-				gui.appendMessage(nick, text);
-			}
-			else
-			{
-				gui.appendMessage(nick, text+" Achtung! Nachricht wurde möglicherweise geändert!");
-			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
+		if (checkHash(hash, computeHash(nick + text))) {
+			gui.appendMessage(nick, text);
+		} else {
+			gui.appendMessage(nick, text
+					+ " Achtung! Nachricht wurde möglicherweise geändert!");
 		}
-		
+
 		System.out.println(nick + ": " + text);
 	}
 
@@ -303,40 +202,61 @@ public class ChatBoard implements  PipeMsgListener
 		this.secretKey = secretKey;
 	}
 
-	private String encrypt(String message) throws Exception {
-		MessageDigest md = MessageDigest.getInstance("SHA-1");
-		byte[] digestOfPassword = md.digest(secretKey.getBytes("utf-8"));
-		byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
-		SecretKey key = new SecretKeySpec(keyBytes, "DESede");
-		Cipher cipher = Cipher.getInstance("DESede");
-		cipher.init(Cipher.ENCRYPT_MODE, key);
-		byte[] plainTextBytes = message.getBytes("utf-8");
-		byte[] buf = cipher.doFinal(plainTextBytes);
-		byte [] base64Bytes = Base64.encode(buf);
-		String base64EncryptedString = new String(base64Bytes);
+	private String encrypt(String message)  {
+		String base64EncryptedString="";
+		try {
+			MessageDigest md = MessageDigest.getInstance("SHA-1");
+			byte[] digestOfPassword = md.digest(secretKey.getBytes("utf-8"));
+			byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
+			SecretKey key = new SecretKeySpec(keyBytes, "DESede");
+			Cipher cipher = Cipher.getInstance("DESede");
+			cipher.init(Cipher.ENCRYPT_MODE, key);
+			byte[] plainTextBytes;
+
+			plainTextBytes = message.getBytes("utf-8");
+
+			byte[] buf = cipher.doFinal(plainTextBytes);
+			byte[] base64Bytes = Base64.encode(buf);
+			base64EncryptedString = new String(base64Bytes);
+			
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
 		return base64EncryptedString;
 	}
 
-	private String decrypt(String encryptedText) throws Exception {
-		byte[] message = Base64.decode(encryptedText.getBytes("utf-8"));
-		MessageDigest md = MessageDigest.getInstance("SHA-1");
-		byte[] digestOfPassword = md.digest(secretKey.getBytes("utf-8"));
-		byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
-		SecretKey key = new SecretKeySpec(keyBytes, "DESede");
-		Cipher decipher = Cipher.getInstance("DESede");
-		decipher.init(Cipher.DECRYPT_MODE, key);
-		byte[] plainText = decipher.doFinal(message);
-		return new String(plainText, "UTF-8");
+	private String decrypt(String encryptedText)  {
+		String decMessage="";
+		try {
+			byte[] message = Base64.decode(encryptedText.getBytes("utf-8"));
+			MessageDigest md = MessageDigest.getInstance("SHA-1");
+			byte[] digestOfPassword = md.digest(secretKey.getBytes("utf-8"));
+			byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
+			SecretKey key = new SecretKeySpec(keyBytes, "DESede");
+			Cipher decipher = Cipher.getInstance("DESede");
+			decipher.init(Cipher.DECRYPT_MODE, key);
+			byte[] plainText = decipher.doFinal(message);
+			decMessage=new String(plainText, "UTF-8");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return decMessage;
 	}
-	public static String computeHash(String text) throws Exception{
-		MessageDigest md = MessageDigest.getInstance("SHA-256");
-		byte[] digestOfText = md.digest(text.getBytes("utf-8"));
-		byte [] base64Bytes = Base64.encode(digestOfText);
-		String base64HashText = new String(base64Bytes);
+	public static String computeHash(String text){
+		
+		String base64HashText="";
+		try {
+			MessageDigest md = MessageDigest.getInstance("SHA-256");
+			byte[] digestOfText = md.digest(text.getBytes("utf-8"));
+			byte[] base64Bytes = Base64.encode(digestOfText);
+			base64HashText = new String(base64Bytes);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
 		return base64HashText;
 	}
 	
-	public static boolean checkHash(String str1, String str2) throws Exception{
+	public static boolean checkHash(String str1, String str2){
 		return ChatBoard.computeHash(str1).equals(ChatBoard.computeHash(str2));
 	}
 	
