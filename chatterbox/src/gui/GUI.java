@@ -151,7 +151,7 @@ public class GUI extends JFrame implements ActionListener{
 			
 			if(!msgTextfield.getText().isEmpty())
 			{
-				if(msgTextfield.getText().matches("^\\w*$")&&msgTextfield.getText().length()<=40)
+				if(msgTextfield.getText().matches("^[\\w\\s!.,?:-]*$")&&msgTextfield.getText().length()<=40)
 				{
 				
 				try {
