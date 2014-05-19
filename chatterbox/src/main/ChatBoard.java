@@ -18,6 +18,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import net.jxta.configuration.JxtaConfigurationException;
+import net.jxta.discovery.DiscoveryEvent;
+import net.jxta.discovery.DiscoveryListener;
 import net.jxta.discovery.DiscoveryService;
 import net.jxta.document.AdvertisementFactory;
 import net.jxta.document.Element;
@@ -119,6 +121,20 @@ public class ChatBoard implements  PipeMsgListener
 		adv.setType(PipeService.PropagateType);
 		adv.setName("ChatPipe");
 		DiscoveryService discovery = group.getDiscoveryService();
+		
+		discovery.addDiscoveryListener(new DiscoveryListener() {
+			
+			@Override
+			public void discoveryEvent(DiscoveryEvent e) {
+				System.out.println("Discovery Event");
+				System.out.println("ID: " + e.getQueryID());
+				System.out.println("Source: " + e.getSource());
+				System.out.println("Response: " + e.getResponse().toString());
+				System.out.println("Results: " + e.getSearchResults());
+				
+			}
+		});
+		
 		try {
 			discovery.publish(adv);
 			discovery.remotePublish(adv);
