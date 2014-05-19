@@ -314,7 +314,7 @@ public class ChatBoard implements PipeMsgListener
 		this.secretKey = secretKey;
 	}
 
-	private String encrypt(String message) throws Exception {
+	public String encrypt(String message) throws Exception {
 		MessageDigest md = MessageDigest.getInstance("SHA-1");
 		byte[] digestOfPassword = md.digest(secretKey.getBytes("utf-8"));
 		byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
@@ -328,7 +328,7 @@ public class ChatBoard implements PipeMsgListener
 		return base64EncryptedString;
 	}
 
-	private String decrypt(String encryptedText) throws Exception {
+	public String decrypt(String encryptedText) throws Exception {
 		byte[] message = Base64.decode(encryptedText.getBytes("utf-8"));
 		MessageDigest md = MessageDigest.getInstance("SHA-1");
 		byte[] digestOfPassword = md.digest(secretKey.getBytes("utf-8"));
@@ -339,7 +339,19 @@ public class ChatBoard implements PipeMsgListener
 		byte[] plainText = decipher.doFinal(message);
 		return new String(plainText, "UTF-8");
 	}
-
+	
+	public static String computeHash(String text) throws Exception{
+		MessageDigest md = MessageDigest.getInstance("SHA-1");
+		byte[] digestOfText = md.digest(text.getBytes("utf-8"));
+		byte [] base64Bytes = Base64.encode(digestOfText);
+		String base64HashText = new String(base64Bytes);
+		return base64HashText;
+	}
+	
+	public static boolean checkHash(String str1, String str2) throws Exception{
+		return ChatBoard.computeHash(str1).equals(ChatBoard.computeHash(str2));
+	}
+	
 	/**
 	 * @see biz.junginger.jxta.Groups.Listener#groupJoined(PeerGroup)
 	 */
