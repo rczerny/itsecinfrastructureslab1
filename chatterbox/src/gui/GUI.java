@@ -177,7 +177,7 @@ public class GUI extends JFrame implements ActionListener{
 	}
 	
 	public void appendMessage(String nick, String text) {
-		textArea.append(nickname+":  " + msgTextfield.getText() + "\n");
+		textArea.append(nick+":  " + text + "\n");
 		JViewport port = scrollPane.getViewport();
 		int y = textArea.getHeight() - textArea.getVisibleRect().height;
 		port.setViewPosition(new Point(0, y));
