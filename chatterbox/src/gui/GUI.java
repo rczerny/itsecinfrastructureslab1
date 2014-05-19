@@ -5,31 +5,40 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JViewport;
 
+import main.ChatBoard;
+import net.jxta.peergroup.PeerGroup;
 import net.miginfocom.swing.MigLayout;
 
 public class GUI extends JFrame implements ActionListener{
 
 	private JPanel pane;
-	private JTextField nameTextfield,pwTextfield,aliasTextfield,msgTextfield;
-	private JLabel nameLabel, pwLabel,aliasLabel,msgLabel;
+	private JTextField nameTextfield,aliasTextfield,msgTextfield,pwkeyStoreTextfield,pwprivteKeyTextfield;
+	private JLabel nameLabel, pwLabel,aliasLabel,msgLabel,pwkeyStoreLabel,pwprivteKeyLabel;
+	private JPasswordField pwTextfield;
 	private JButton loginButton,sendButton;
 	private JTextArea textArea;
 	private JScrollPane scrollPane;
 	private String nickname;
+	private ChatBoard cb;
+	private PeerGroup peergroup;
 	
-	public GUI()
+	public GUI(ChatBoard cb,PeerGroup peergroup)
 	{
+		this.cb=cb;
+		this.peergroup=peergroup;
 		pane=(JPanel) this.getContentPane();
 		pane.setLayout(new MigLayout("fillx"));
 		
@@ -43,8 +52,12 @@ public class GUI extends JFrame implements ActionListener{
 			
 		nameLabel=new JLabel("Benutzername:");
         nameTextfield=new JTextField(10);
-        pwLabel=new JLabel("Passwort:");
-        pwTextfield=new JTextField(10);
+        pwLabel=new JLabel("Gruppenkennung:");
+        pwTextfield=new JPasswordField(10);
+        //pwkeyStoreLabel=new JLabel("Passwort:");
+        //pwkeyStoreTextfield=new JTextField(10);
+        //pwprivteKeyLabel=new JLabel("Passwort:");
+        //pwprivteKeyTextfield=new JTextField(10);
         loginButton=new JButton("Anmelden");
         loginButton.addActionListener(this);
         
@@ -65,8 +78,8 @@ public class GUI extends JFrame implements ActionListener{
         
         pane.add(aliasLabel,"h 30!, push, aligny b");
         pane.add(aliasTextfield,"aligny b,wrap");
-        pane.add(nameLabel);
-	    pane.add(nameTextfield,"wrap");
+        //pane.add(nameLabel);
+	    //pane.add(nameTextfield,"wrap");
         pane.add(pwLabel,"push, aligny top");
         pane.add(pwTextfield,"aligny top,wrap");
         pane.add(loginButton,"h 30!,span 2 2, align c,push, aligny top");
@@ -85,35 +98,37 @@ public class GUI extends JFrame implements ActionListener{
 				
 			
 			if (!aliasTextfield.getText().isEmpty()
-					&& !nameTextfield.getText().isEmpty()
-					&& !pwTextfield.getText().isEmpty()) {
+			//		&& !nameTextfield.getText().isEmpty()
+					&& pwTextfield.getPassword().length >0) {
 				if (aliasTextfield.getText().length() <= 10
 						&& aliasTextfield.getText().matches("^\\w*$")
-						&& nameTextfield.getText().length() <= 10
-						&& pwTextfield.getText().length() <= 15) {
+			//			&& nameTextfield.getText().length() <= 10
+						&& pwTextfield.getPassword().length <= 15) {
 					
 					//Passwortüberprüfung
-					if (true) {
+					//if (true) {
 						
 						nickname=aliasTextfield.getText();
+						cb.joinedGroup(peergroup, new String(pwTextfield.getPassword()));
 						pane.removeAll();
-
+						
 						pane.add(scrollPane, "span 2, push,wrap");
 						pane.add(msgLabel);
 						pane.add(msgTextfield, "wrap");
 						pane.add(sendButton, "h 30!,span 2 2, align c");
 						this.setSize(600, 500);
 						this.validate();
-
+/**
 					} else {
 						JOptionPane.showMessageDialog(this,
-								"Benutzername/Passwort falsch!", "Error",
+								"Passwort falsch!", "Error",
 								JOptionPane.ERROR_MESSAGE);
 						nameTextfield.setText("");
 						pwTextfield.setText("");
 						aliasTextfield.setText("");
 
 					}
+					**/
 				} else {
 					JOptionPane
 							.showMessageDialog(
@@ -132,12 +147,14 @@ public class GUI extends JFrame implements ActionListener{
 			{
 				if(msgTextfield.getText().matches("^\\w*$")&&msgTextfield.getText().length()<=40)
 				{
-				textArea.append(nickname+":  " + msgTextfield.getText() + "\n");
-				JViewport port = scrollPane.getViewport();
-				int y = textArea.getHeight() - textArea.getVisibleRect().height;
-				port.setViewPosition(new Point(0, y));
 				
-				aliasTextfield.setText("");
+				try {
+					cb.sendMessage(nickname, msgTextfield.getText());
+				} catch (IOException e1) {
+					JOptionPane.showMessageDialog(this,e1.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+
+				}
+				
 				msgTextfield.setText("");
 				}
 				else
@@ -152,13 +169,21 @@ public class GUI extends JFrame implements ActionListener{
 		}
 		
 	}
+	
+	public void appendMessage(String nick, String text) {
+		textArea.append(nickname+":  " + msgTextfield.getText() + "\n");
+		JViewport port = scrollPane.getViewport();
+		int y = textArea.getHeight() - textArea.getVisibleRect().height;
+		port.setViewPosition(new Point(0, y));
+	}
+	
 	/**
 	 * @param args
-	 */
+	 *
 	public static void main(String[] args) {
 		new GUI();
 
 	}
 	
-
+**/
 }
