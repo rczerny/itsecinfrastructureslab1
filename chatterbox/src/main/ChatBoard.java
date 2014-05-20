@@ -51,7 +51,7 @@ public class ChatBoard implements  PipeMsgListener
 
 	private String secretKey;
 
-	public static final String name = "ChatBoard";
+	public static final String name = "ChatterBox";
 	public static final File configurationFile = new File("." + System.getProperty("file.separator") + name);
 	public static final int tcpPort = 9723;
 
