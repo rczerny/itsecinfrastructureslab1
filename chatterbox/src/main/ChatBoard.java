@@ -10,7 +10,6 @@ import java.util.Enumeration;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import net.jxta.configuration.JxtaConfigurationException;
 import net.jxta.discovery.DiscoveryService;
 import net.jxta.document.AdvertisementFactory;
 import net.jxta.document.Element;
@@ -69,7 +68,7 @@ public class ChatBoard implements  PipeMsgListener
 			myNetworkConfigurator.setTcpPort(tcpPort);
 			myNetworkConfigurator.setTcpEnabled(true);
 			myNetworkConfigurator.setTcpIncoming(true);
-			myNetworkConfigurator.setTcpOutgoing(true);        
+			myNetworkConfigurator.setTcpOutgoing(true);
 
 			// Starting the JXTA network
 			PeerGroup netPeerGroup = myNetworkManager.startNetwork();
