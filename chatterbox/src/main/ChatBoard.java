@@ -4,22 +4,13 @@ import gui.GUI;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Enumeration;
-
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-
 import net.jxta.configuration.JxtaConfigurationException;
-import net.jxta.discovery.DiscoveryEvent;
-import net.jxta.discovery.DiscoveryListener;
 import net.jxta.discovery.DiscoveryService;
 import net.jxta.document.AdvertisementFactory;
 import net.jxta.document.Element;
@@ -33,7 +24,6 @@ import net.jxta.endpoint.TextDocumentMessageElement;
 import net.jxta.exception.PeerGroupException;
 import net.jxta.id.IDFactory;
 import net.jxta.peergroup.PeerGroup;
-import net.jxta.peergroup.PeerGroupID;
 import net.jxta.pipe.InputPipe;
 import net.jxta.pipe.OutputPipe;
 import net.jxta.pipe.PipeID;
@@ -58,40 +48,36 @@ public class ChatBoard implements  PipeMsgListener
 	private OutputPipe outPipe;
 	private MimeMediaType mimeType=new MimeMediaType("text", "xml");
 
-
-	
 	private static GUI gui;
-	
+
 	private String secretKey;
-	
-	public static final String Name = "ChatBoard";
-	public static final File ConfigurationFile = new File("." + System.getProperty("file.separator") + Name);
-    public static final int TcpPort = 9723;
+
+	public static final String name = "ChatBoard";
+	public static final File configurationFile = new File("." + System.getProperty("file.separator") + name);
+	public static final int tcpPort = 9723;
 
 	public static void main(String[] args) throws JxtaConfigurationException, IOException{
 		try {
 
 
-            // Creation of network manager
-            NetworkManager MyNetworkManager = new NetworkManager(NetworkManager.ConfigMode.EDGE,
-                    Name, ConfigurationFile.toURI());
-            
-            // Retrieving the network configurator
-            NetworkConfigurator MyNetworkConfigurator = MyNetworkManager.getConfigurator();
-            
-            // Setting Configuration
-            MyNetworkConfigurator.setTcpPort(TcpPort);
-            MyNetworkConfigurator.setTcpEnabled(true);
-            MyNetworkConfigurator.setTcpIncoming(true);
-            MyNetworkConfigurator.setTcpOutgoing(true);
+			// Creation of network manager
+			NetworkManager myNetworkManager = new NetworkManager(NetworkManager.ConfigMode.EDGE, name, configurationFile.toURI());
 
-            
-            // Starting the JXTA network
-            PeerGroup NetPeerGroup = MyNetworkManager.startNetwork();
-            
-            ChatBoard cb = new ChatBoard();         
-            
-			RendezVousService rdv=NetPeerGroup.getRendezVousService();
+			// Retrieving the network configurator
+			NetworkConfigurator myNetworkConfigurator = myNetworkManager.getConfigurator();
+
+			// Setting Configuration
+			myNetworkConfigurator.setTcpPort(tcpPort);
+			myNetworkConfigurator.setTcpEnabled(true);
+			myNetworkConfigurator.setTcpIncoming(true);
+			myNetworkConfigurator.setTcpOutgoing(true);        
+
+			// Starting the JXTA network
+			PeerGroup netPeerGroup = myNetworkManager.startNetwork();
+
+			ChatBoard cb = new ChatBoard();         
+
+			RendezVousService rdv = netPeerGroup.getRendezVousService();
 			while(!rdv.getLocalRendezVousView().isEmpty())
 			{
 				try {
@@ -99,47 +85,46 @@ public class ChatBoard implements  PipeMsgListener
 				}
 				catch(Exception ex) {}
 			}
-			gui=new GUI(cb,NetPeerGroup);
-			
+			gui = new GUI(cb, netPeerGroup);
+
 		} catch (PeerGroupException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
 
-
-
 	}
-	
+
 	public void joinedGroup(PeerGroup group)
 	{
 		this.group = group;
 		pipes = group.getPipeService();
-		PipeAdvertisement adv = (PipeAdvertisement) AdvertisementFactory
-				.newAdvertisement(PipeAdvertisement.getAdvertisementType());
-		//PipeID pid=(PipeID)IDFactory.newPipeID(group.getPeerGroupID(),secretKey.getBytes());
+		PipeAdvertisement adv = (PipeAdvertisement) AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
 		PipeID pid=(PipeID)IDFactory.newPipeID(group.getPeerGroupID(),computeHash(secretKey).getBytes());
 		adv.setPipeID(pid);
 		adv.setType(PipeService.PropagateType);
 		adv.setName("ChatPipe");
 		DiscoveryService discovery = group.getDiscoveryService();
-		
+
 		try {
 			discovery.publish(adv);
 			discovery.remotePublish(adv);
 			connectPipe(adv);
-			System.out.println("joined group");
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		}
 	}
 
 	public void connectPipe(PipeAdvertisement adv) throws java.io.IOException
 	{
-		if (inPipe != null)
+		if (inPipe != null){
 			inPipe.close();
+		}
+
 		inPipe = null;
-		if (outPipe != null)
+
+		if (outPipe != null){
 			outPipe.close();
+		}
+
 		outPipe = null;
 
 		inPipe = pipes.createInputPipe(adv, this);
@@ -153,17 +138,18 @@ public class ChatBoard implements  PipeMsgListener
 		if (outPipe == null) {
 			throw new IOException("Not connected yet.\n");
 		}
+		
 		StructuredDocument doc=StructuredDocumentFactory.newStructuredDocument(mimeType, "JXTA-Tutorial:ChatMsg");
 		doc.appendChild(doc.createElement("Text", encrypt(text)));
 		doc.appendChild(doc.createElement("Sender", encrypt(sender)));
 		doc.appendChild(doc.createElement("Hash", encrypt(computeHash(sender+text))));
 
-		Message msg=new Message();
+		Message msg = new Message();
 		msg.addMessageElement(new TextDocumentMessageElement("ChatMsg", (TextDocument) doc,null));
 		outPipe.send(msg);
 	}
 
-	
+
 	@SuppressWarnings("rawtypes")
 	public void pipeMsgEvent(PipeMsgEvent msg) {
 		MessageElement element = msg.getMessage().getMessageElement("ChatMsg");
@@ -178,28 +164,25 @@ public class ChatBoard implements  PipeMsgListener
 
 		String nick = null;
 		String text = null;
-		String hash=null;
+		String hash = null;
 		Enumeration enums = doc.getChildren();
-		
+
 		while (enums.hasMoreElements()) {
 			Element el = (Element) enums.nextElement();
 			if (el.getKey().equals("Sender"))
-					nick = decrypt((String) el.getValue());
+				nick = decrypt((String) el.getValue());
 			if (el.getKey().equals("Text"))
-					text = decrypt((String) el.getValue());
+				text = decrypt((String) el.getValue());
 			if (el.getKey().equals("Hash"))
 				hash = decrypt((String) el.getValue());
-	
+
 		}
 
 		if (checkHash(hash, computeHash(nick + text))) {
 			gui.appendMessage(nick, text);
 		} else {
-			gui.appendMessage(nick, text
-					+ " Achtung! Nachricht wurde möglicherweise geändert!");
+			gui.appendMessage(nick, text + " Achtung! Nachricht wurde möglicherweise geändert!");
 		}
-
-		System.out.println(nick + ": " + text);
 	}
 
 	public void setSecretKey(String secretKey){
@@ -222,7 +205,7 @@ public class ChatBoard implements  PipeMsgListener
 			byte[] buf = cipher.doFinal(plainTextBytes);
 			byte[] base64Bytes = Base64.encode(buf);
 			base64EncryptedString = new String(base64Bytes);
-			
+
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
@@ -247,7 +230,7 @@ public class ChatBoard implements  PipeMsgListener
 		return decMessage;
 	}
 	public static String computeHash(String text){
-		
+
 		String base64HashText="";
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -259,10 +242,9 @@ public class ChatBoard implements  PipeMsgListener
 		}
 		return base64HashText;
 	}
-	
+
 	public static boolean checkHash(String str1, String str2){
 		return ChatBoard.computeHash(str1).equals(ChatBoard.computeHash(str2));
 	}
 
-	
 }
