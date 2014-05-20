@@ -56,9 +56,8 @@ public class ChatBoard implements  PipeMsgListener
 	public static final File configurationFile = new File("." + System.getProperty("file.separator") + name);
 	public static final int tcpPort = 9723;
 
-	public static void main(String[] args) throws JxtaConfigurationException, IOException{
+	public static void main(String[] args){
 		try {
-
 
 			// Creation of network manager
 			NetworkManager myNetworkManager = new NetworkManager(NetworkManager.ConfigMode.EDGE, name, configurationFile.toURI());
@@ -88,6 +87,8 @@ public class ChatBoard implements  PipeMsgListener
 			gui = new GUI(cb, netPeerGroup);
 
 		} catch (PeerGroupException e) {
+			System.out.println(e.getMessage());
+		} catch (IOException e) {
 			System.out.println(e.getMessage());
 		}
 
