@@ -263,5 +263,6 @@ public class ChatBoard implements  PipeMsgListener
 	public static boolean checkHash(String str1, String str2){
 		return ChatBoard.computeHash(str1).equals(ChatBoard.computeHash(str2));
 	}
+
 	
 }

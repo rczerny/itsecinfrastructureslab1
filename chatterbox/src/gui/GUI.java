@@ -79,6 +79,7 @@ public class GUI extends JFrame implements ActionListener{
         pane.add(loginButton,"growx, span 2 2");
         
 		 this.setSize(300, 150);
+		 this.setResizable(false);
          this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
          this.setVisible(true);
          this.setTitle("Chatterbox");
@@ -103,6 +104,11 @@ public class GUI extends JFrame implements ActionListener{
 						
 						cb.setSecretKey(new String(pwTextfield.getPassword()));
 						cb.joinedGroup(peergroup);
+						try {
+							cb.sendMessage(nickname, "has joined the Chatgroup!>");
+						} catch (IOException e1) {
+							System.out.println(e1.getMessage());
+						}
 						pane.removeAll();
 						
 						pane.add(scrollPane, "span 2, push,wrap");
@@ -121,6 +127,7 @@ public class GUI extends JFrame implements ActionListener{
 						});
 						
 						this.setSize(600, 500);
+					
 						this.validate();
 
 				} else {
@@ -166,7 +173,14 @@ public class GUI extends JFrame implements ActionListener{
 	}
 	
 	public void appendMessage(String nick, String text) {
-		textArea.append(nick+":  " + text + "\n");
+		if(text.contains(">"))
+		{
+			textArea.append("<"+nick+" " + text + "\n");
+		}
+		else
+		{
+			textArea.append(nick+":  " + text + "\n");
+		}
 		JViewport port = scrollPane.getViewport();
 		int y = textArea.getHeight() - textArea.getVisibleRect().height;
 		port.setViewPosition(new Point(0, y));
