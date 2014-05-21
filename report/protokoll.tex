@@ -74,19 +74,19 @@
 \section{Lab1a}
 
 \subsection{Report}
-Speicherung des Passworts mangelhaft (OWASP A7): 
+\textbf{Speicherung des Passworts mangelhaft (OWASP A7):}
 In der Anwendung wird ein SHA1-Hash f\"ur die Speicherung des Passworts in die Datenbank verwendet, wodurch zu allen gespeicherten Hashes mittels beispielsweise Rainbow-Tabellen in ausreichend lohnenswerter Zeit der passende Klartext gefunden werden kann. Weit aus sicherer wäre es, wenn ein stärkeres Hashverfahren z.B. SHA256 in Kombination eines Salts verwendet werden würde.
 \newline
 \newline
-Sicherheitsrelevante Fehlkonfiguration (OWASP A6):
+\textbf{Sicherheitsrelevante Fehlkonfiguration (OWASP A6):}
 Directory Listing ist in der Anwendung nicht deaktiviert. Angreifer können einfach im Verzeichnis des Servers navigieren und so alle Pythonklassen und die Datenbank herunterladen und somit verschiedenste Schwachstellen durch Code- bzw. Datenbankanalyse herausfiltern. Im speziellen können alle unverschlüsselt gespeicherten Daten(Usernamen, Events,…) aus der Datenbank gelesen werden, da die SqlLite-Datenbank nicht mittels Passwort verschlüsselt werden kann. 
 \newline
 \newline
-Unzureichende Absicherung der Transportschicht (OWASP A9): 
+\textbf{Unzureichende Absicherung der Transportschicht (OWASP A9):}
 Die Authentifizierung erfolgt ohne TLS/SSL, wodurch die Anmeldeinformationen im Netzwerkverkehr für jeden im Klartext ersichtlich wären. Angreifer könnten diesen einfach sniffen und so Zugang zu dem Benutzerkonto erhalten. Auch für die Textkommunikation wäre die Verwendung von TLS/SSL sinnvoll bzw. erforderlich, da es sich um sensible Daten handelt.
 \newline
 \newline
-Fehler im Sessionmanagement (OWASP A3): 
+\textbf{Fehler im Sessionmanagement (OWASP A3):}
 Im Zuge des Sessionmanagements wurden gleich einige Fehler gemacht. Erstens wurden die Session-IDs in der URL mitgeschickt und zweitens wurden diese auch ungeschützt (ohne TLS/SSL) übertragen, wodurch Angreifer einfach die Session des Benutzers übernehmen können(Session Hijacking), wenn Angreifer Zugriff auf den relevanten Netzverkehr haben und diesen ausliest. Durch die Speicherung der Session in der URL ist es schon gefährlich, wenn der Benutzer unvorsichtig diese als Link an Freunden schickt, welche dann (möglicherweise unbewusst) seine Session übernehmen. Verhindert werden kann das, indem die Session-ID erstens nicht in der URL übertragen wird, sondern nur über TLS/SSL gesicherte Transportwege bzw. über ein Cookie mit gesetztem Secure-Flag. 
 Des weiteren wurde die Zeit  für das Auslaufen der Session viel zu lang spezifiziert (6000s=1h 40min). Nachfolgende Benutzer des Browsers können bei unzureichendem Logout(einfaches Schließen des Browsers) einfach weiterhin die Session des zuvor angemeldeten Users verwenden. Zusätzlich besteht bei der ursprünglichen Chatterboxanwendung nicht einmal die Möglichkeit eine Abmeldung des Users durchzuführen.
 \newline
@@ -142,46 +142,27 @@ Um Availability - Verf\"ugbarkeit zu gew\"ahrleisten darf das System nicht von e
   \label{fig:p2p}
 \end{figure}
 
+\newpage
+\subsection{Verwendete Technologie}
+
+\subsubsection{Java}
+Als Programmiersprache wird Java verwendet. Dies erm\"{o}glicht eine Plattformunabh\"{a}ngigkeit und damit eine einfache Verbreitung der Software auf verschiedensten Plattformen
+
+\subsubsection{JXTA/JXSE}
+Zur Umsetzung der P2P-Technologie wird JXTA, bzw. die Java-Implementierung davon JXSE, verwendet. Die JXSE-Pattform erlaubt es uns auf bestehende und erprobte Umsetzungen des Peer-To-Peer Konzepts zur\"{u}ckzugreifen und abstrahiert dadurch einiges an Arbeit und m\"{o}glichen Problemen weg.
+
+\subsubsection{Bouncy Castle Provider}
+Als moderner Anbieter diverser Sicherheitstechnologien und -Algorithmen verwenden wir Bouncy Castle zur Umsetzung der Verschl\"{u}sselung und des Hashings.
+
+
 \subsection{Executive Summary}
-Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. 
-
-\section{Lab1c}
-
-\subsection{Source Code formatieren}
-Es folgen einige Beispiele wie Source Code in diesem Dokument formatiert und referenziert werden kann
-(\hyperref[code:beispiel1]{siehe Listing~\ref*{code:beispiel1} auf Seite~\pageref*{code:beispiel1}} und \hyperref[code:beispiel2]{siehe Listing~\ref*{code:beispiel2} auf Seite~\pageref*{code:beispiel2}}).
-
-Ebenso können kurzer Code oder kurze Befehle direkt in der Zeile in einem \lstinline{lstinline Block} mit typengleicher Schrift formatiert werden.
-
-\lstinputlisting[caption=Example C/C++ file,label=code:beispiel1,style=c]{example.c}
-
-\begin{lstlisting}[caption=Example bash script,label=code:beispiel2,style=simple]
-#!/bin/bash
-echo "Bash version ${BASH_VERSION}..."
-for i in {0..10..2}
-  do
-     echo "Welcome $i times"
- done
-
-echo "some very very very very very very very very very very very very very very very very very very very very long string"
-
-exit 0;
-\end{lstlisting}
-
-\subsection{Bilder}
-
-Es folgen einige Beispiele wie Bilder in diesem Dokument eingefügt werden können
-(\hyperref[fig:logo1]{siehe Abbildung~\ref*{fig:logo1} auf Seite~\pageref*{fig:logo1}}).
-
-\begin{figure}[h!]
-  \centering
-  \fbox{
-    \includegraphics[width=0.4\textwidth]{./imgs/esse-color.png}
-  }
-  \caption{ESSE Logo}
-  \label{fig:logo1}
-\end{figure}
-
+Um Chatterbox als sichere Applikation neu zu designen haben wir uns auf die drei wichtigsten Sicherheitsziele konzentriert: Vertraulichkeit, Integrit\"at und Verf\"{u}gbarkeit.
+\begin{itemize}
+\item \textbf{Vertraulichkeit} - also die Eigenschaft, dass kein Unbefugter die Nachricht lesen kann - wird mittels modernster Verschl\"{u}sselung gew\"{a}hrleistet
+\item \textbf{Integrit\"{a}t} - hier wird sichergestellt, dass die Nachricht nicht manipuliert werden kann und original beim Empf\"{a}nger ankommt - wird sichergestellt indem ein Hash-Verfahren verwendet wird, dass den Originalzustand der Nachricht  sicherstellt.
+\item \textbf{Verf\"{u}gbarkeit} - die Eigenschaft dass das Chatterbox-System m\"{o}glichst stabil und robust l\"{a}uff und die Ausfallquote minimalst gehalten wird - wird gew\"{a}herleitet, indem der ``Single-Point-Of-Failure'' ausgemerzt wird. So wird sichergestellt, dass das System weiterhin problemlos laufen kann, auch wenn ein oder mehrere Maschinen abst\"{u}rzen.
+\end{itemize}
+Auf diese Weise kann Chatterbox als sichere Chat-Applikation verwendet werden und der User darauf vertrauen, dass seine Kommunikation die Sicherheit bekommt, die sie verdient.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
