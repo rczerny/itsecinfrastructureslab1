@@ -20,7 +20,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Group number or "0" for Lab0
-\newcommand{\gruppe}{2}
+\newcommand{\gruppe}{1}
 % Date
 \newcommand{\datum}{2014-05-16}
 % valid values: "Lab0", "Lab1" (be sure to use Uppercase for first character)
@@ -113,14 +113,14 @@ Ein Benutzer loggt sich "uber ein unverschl"usseltes WLAN an einem ChatterBox-Se
 Mittels dieser Session-ID erh"alt der Angreifer nun Zugriff auf den Account des Benutzers indem er die gestohlene ID "uber die URL angibt (\lstinline{http://<Server-IP>:8000/cb/main.py?sid=<gestohlene SID des Benutzers>}).
 
 \subsection{Executive summary}
-Die Chatterbox Applikation wurde einer gr"undlichen Security-Untersuchung unterzogen, bei der schwere Sicherheitsm"angel festgestellt wurden. In der jetzigen Form sind Vertraulichkeit, Integrit"at und Verf"ugbarkeit der Daten gef"ahndet und von einer Verwendung wird dringend abgeraten. Viele dieser M"angel gehen auf Fehler in der Design-Phase von Chatterbox zur"uck, weshalb sich zusammenfassend feststellen l"asst, dass aufgrund teilweise schwerwiegender Sicherheits-Mängel der Chatterbox Applikation - unter anderem fehlender Beachtung von Vertraulichkeit, Integrität und Verfügbarkeit - zu einer grundlegenden Neuprogrammierung geraten wird.
+Die Chatterbox Applikation wurde einer gr"undlichen Security-Untersuchung unterzogen, bei der schwere Sicherheitsm"angel festgestellt wurden. In der jetzigen Form sind Vertraulichkeit, Integrit"at und Verf"ugbarkeit der Daten gef"arndet und von einer Verwendung wird dringend abgeraten. Viele dieser M"angel gehen auf Fehler in der Design-Phase von Chatterbox zur"uck, weshalb sich zusammenfassend feststellen l"asst, dass aufgrund teilweise schwerwiegender Sicherheits-Mängel der Chatterbox Applikation - unter anderem fehlender Beachtung von Vertraulichkeit, Integrität und Verfügbarkeit - zu einer grundlegenden Neuprogrammierung geraten wird.
 
 \section{Lab1b}
 
 Um die erkannten Schwachstellen schon in der Design-Phase des Projekts kategorisch auszumerzen, gibt es drei Design-Ziele zu verfolgen, n\"amlich die sogenannte CIA-Triade (Confidentiality, Integrity, Availability - zu deutsch Vertraulichkeit, Integrit\"at, Verf\"ugbarkeit). Mit dem Fokus auf diesen Zielen m\"ochten wir nun eine sichere Basis und Ausgangspunkt f\"ur die Neuentwicklung von Chatterbox erstellen.
 
 \subsection{Confidentiality}
-Um confidentiality - Vertraulichkeit zu gew\"ahrleisten ist es essentiell, dass nur der/die gew\"unschte/n Empf\"anger die Nachricht lesen k\"onnen. Es darf nicht m\"oglich sein, dass ein Dritter heimlich oder offensichtlich die Nachricht abfangen und lesen kann. Das beste Mittel zur Vertraulichkeit ist die Verschl\"usselung. Durch das Verschl\"usseln der Nachrichten, kann sie nur von jemandem gelesen werden, der den Schl\"ussel hat und das sind lediglich die Personen, die in einem gemeinsamen Chatroom sind. Ein Dritter w\"urde lediglich die verschl\"usselte Nachricht erhalten, mit der er nichts anfangen kann. Eine Nachricht beinh\"alt auch eine Kennung f\"ur den Absender, die mitverschl\"usselt wird, um sicherzustellen, dass der angebliche Absender auch der tats\"achliche Absender ist. Damit ist die Vertraulichkeit gew\"ahrleistet. (\hyperref[fig:encryption]{siehe Abbildung~\ref*{fig:encryption}})
+Um confidentiality - Vertraulichkeit zu gew\"ahrleisten, ist es essentiell, dass nur der/die gew\"unschte/n Empf\"anger die Nachricht lesen k\"onnen. Es darf nicht m\"oglich sein, dass ein Dritter heimlich oder offensichtlich die Nachricht abfangen und lesen kann. Das beste Mittel zur Vertraulichkeit ist die Verschl\"usselung. Durch das Verschl\"usseln der Nachrichten, kann sie nur von jemandem gelesen werden, der den Schl\"ussel hat und das sind lediglich die Personen, die in einem gemeinsamen Chatroom sind. Ein Dritter w\"urde lediglich die verschl\"usselte Nachricht erhalten, mit der er nichts anfangen kann. Eine Nachricht beinh\"alt auch eine Kennung f\"ur den Absender, die mitverschl\"usselt wird, um sicherzustellen, dass der angebliche Absender auch der tats\"achliche Absender ist. Damit ist die Vertraulichkeit gew\"ahrleistet. (\hyperref[fig:encryption]{siehe Abbildung~\ref*{fig:encryption}})
 
 \subsection{Integrity}
 Die Integrit\"at beschreibt die Eigenschaft, dass die Nachricht, die versendet wird auch tats\"achlich jene Nachricht ist, die ankommen wird. Sie darf auf dem Weg weder durch Dritte noch durch irgendwelche Fehler ver\"andert werden. Um dies zu gew\"ahrleisten bedienen wir uns einer Hash-Summe, die f\"ur einen gegebenen Absender und den Text eindeutig ist. Am Ziel wird die Hashsumme erneut berechnet und mit der \"ubertragenen Hash-Summe verglichen. Stimmt der Wert \"uberein, so ist die Integrit\"at gew\"ahrleistet. Damit die Hash-Summe nicht ver\"andert werden kann wird diese in der Nachricht mitverschl\"usselt. (\hyperref[fig:encryption]{siehe Abbildung~\ref*{fig:encryption}})
@@ -133,7 +133,7 @@ Die Integrit\"at beschreibt die Eigenschaft, dass die Nachricht, die versendet w
 \end{figure}
 
 \subsection{Availability}
-Um Availability - Verf\"ugbarkeit zu gew\"ahrleisten darf das System nicht von einem einzigen Punkt abh\"angen. In der vorigen Version gab es f\"ur Chatterbox nur einen Server. Dies ist f\"ur diesen Anwendungsfall im Kontext der Verf\"ugbarkeit sehr unvorteilhaft. Damit ist der Server ein "Single-Point-Of-Failure" und rei"st bei einem Absturz das ganze System mit sich mit. Um dem vorzubeugen bedienen wir uns der P2P(Peer-To-Peer)-Technologie, in der die Clients direkt miteinander kommunizieren k\"onnen. Damit f\"uhrt der Absturz einer Maschine nicht zum Absturz des gesamten Chat-Netzwerks. (\hyperref[fig:p2p]{siehe Abbildung~\ref*{fig:p2p}})
+Um Availability - Verf\"ugbarkeit zu gew\"ahrleisten darf das System nicht von einem einzigen Punkt abh\"angen. In der vorigen Version gab es f\"ur Chatterbox nur einen Server. Dies ist f\"ur diesen Anwendungsfall im Kontext der Verf\"ugbarkeit sehr unvorteilhaft. Damit ist der Server ein ``Single-Point-Of-Failure'' und rei"st bei einem Absturz das ganze System mit sich mit. Um dem vorzubeugen bedienen wir uns der P2P(Peer-To-Peer)-Technologie, in der die Clients direkt miteinander kommunizieren k\"onnen. Damit f\"uhrt der Absturz einer Maschine nicht zum Absturz des gesamten Chat-Netzwerks. (\hyperref[fig:p2p]{siehe Abbildung~\ref*{fig:p2p}})
 
 \begin{figure}[h!]
   \centering
@@ -145,7 +145,7 @@ Um Availability - Verf\"ugbarkeit zu gew\"ahrleisten darf das System nicht von e
 \newpage
 \subsection{Programm-Ablauf}
 Wenn der User die Applikation startet, soll er eine Eingabemaske vor sich haben, in der er seinen Benutzernamen und ein Passwort eingeben soll. Das Passwort hat jeder Benutzer, der in einem Gruppenchat Mitglied sein soll und muss geheim gehalten werden. Das Passwort wird gehashte und daraus dann eine ID berechnet, welche den Gruppenchat eindeutig identifiziert. Das Passwort verl\"{a}sst den lokalen Rechner niemals. Ist man dem Gruppenchat beigetreten wird aus dem gehashten Passwort auch noch ein Key generiert, der zur synchronen Verschl\"{u}sselung der Nachrichten dient. Nun kann der Benutzer im Gruppenchat Nachrichten versenden und empfangen. Selbst wenn ein Angreifer in dem Chatroom ist, k\"{o}nnte er ohne das richtige Passwort keine Nachrichten lesen.
-Wie bereits weiter oben beschrieben besteht eine Nachricht aus dem Absender, dem Nachrichtentext und der Hashsumme von Absender und Nachrichtentext gemeinsam. Das gesamte Paket wird dann verschl\"{u}sselt und versandt. Der Empf\"{a}nger entschl\"{u}sselt das Paket, erzeugt die Hashsumme von Absender und Nachrichtentext und vergleicht sie mit der Hashsumme, die ihm \"{u}bermittelt wurde. So bleibt auch die Integrit\"{a}t gewahrt.
+Wie bereits weiter oben beschrieben, besteht eine Nachricht aus dem Absender, dem Nachrichtentext und der Hashsumme von Absender und Nachrichtentext gemeinsam, welche vor dem Versenden jeweils verschl"usselt werden. Der Empf\"{a}nger entschl\"{u}sselt das Paket, erzeugt die Hashsumme von Absender und Nachrichtentext und vergleicht sie mit der Hashsumme, die ihm \"{u}bermittelt wurde. So bleibt auch die Integrit\"{a}t gewahrt.
 Dank P2P-Technologien wie JXTA wird hier nicht einmal ein Server ben\"{o}tigt.
 
 \subsection{Verwendete Technologie}
